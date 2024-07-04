@@ -14,9 +14,13 @@ public struct TransientLabel: View {
             self.delay = delay
         }
         
-        public func appear(with string: String) {
-            isVisible = true
+        public func set(string: String) {
             self.string = string
+            appear()
+        }
+        
+        public func appear() {
+            isVisible = true
             timer?.invalidate()
             timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false, block: { [weak self] _ in
                 self?.isVisible = false
@@ -33,7 +37,8 @@ public struct TransientLabel: View {
         Text(vm.string)
             .font(font.monospacedDigit())
             .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
-            .background(RoundedRectangle(cornerRadius: 4.0).fill(backgroundColor))
+            .background(RoundedRectangle(cornerRadius: 8.0).fill(backgroundColor))
+            .compositingGroup()
             .opacity(vm.isVisible ? 1.0 : 0.0)
             .animation(.linear(duration: vm.isVisible ? 0.05 : 0.1), value: vm.isVisible)
     }
@@ -53,7 +58,11 @@ public struct TransientLabel: View {
     ///  - Parameter string: The string for the label to display.
     ///
     public func display(_ string: String) {
-        vm.appear(with: string)
+        vm.set(string: string)
+    }
+    
+    public func appear() {
+        vm.appear()
     }
 }
 
@@ -66,12 +75,12 @@ public struct TransientLabel: View {
     VStack {
         VStack {
             label1
-                .opacity(1)
             label2
                 .foregroundColor(.white)
-                .opacity(1)
+                .onTapGesture {
+                    label2.appear()
+                }
             label3
-                .opacity(1)
         }
         .padding()
         .background(Color.gray)
