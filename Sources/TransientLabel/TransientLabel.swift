@@ -1,100 +1,105 @@
-import SwiftUI
+import UIKit
 
-/// Creates a label that disappears after a short time.
-public struct TransientLabel: View {
+public final class TransientLabel: UIView {
     
-    public class VisibilityManager: ObservableObject {
-        @Published var isVisible: Bool = false
-        @Published var string: String = ""
+    public var delay: TimeInterval
+    private let font: UIFont
+    private let textColor: UIColor
+    private let backgroundShapeColor: UIColor
+    
+    public private(set) var text: String = ""
+    private var label: UILabel?
+    
+    private var visTimer: Timer?
+    
+    private var isVisible: Bool = false
+    
+    public init(delay: TimeInterval = 1, font: UIFont = .preferredFont(forTextStyle: .headline), textColor: UIColor = .label, backgroundColor: UIColor = .systemBackground.withAlphaComponent(0.4)) {
+        self.delay = delay
         
-        private let delay: TimeInterval
-        private var timer: Timer?
+        let monoDigitFeature = [
+            UIFontDescriptor.FeatureKey.featureIdentifier : kNumberSpacingType,
+            UIFontDescriptor.FeatureKey.selector : kMonospacedNumbersSelector
+        ]
+        let monoDesc = font.fontDescriptor.addingAttributes([UIFontDescriptor.AttributeName.featureSettings : [monoDigitFeature]])
+        let monoFont = UIFont(descriptor: monoDesc, size: font.pointSize)
+        self.font = monoFont
         
-        public init(delay: TimeInterval) {
-            self.delay = delay
-        }
+        self.textColor = textColor
+        self.backgroundShapeColor = backgroundColor
         
-        public func set(string: String) {
-            self.string = string
-            appear()
-        }
-        
-        public func appear() {
-            isVisible = true
-            timer?.invalidate()
-            timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false, block: { [weak self] _ in
-                self?.isVisible = false
-            })
-        }
+        super.init(frame: .zero)
     }
     
-    @ObservedObject private var vm: VisibilityManager
-    
-    private let font: Font
-    private let backgroundColor: Color
-    
-    public var body: some View {
-        Text(vm.string)
-            .font(font.monospacedDigit())
-            .padding(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
-            .background(RoundedRectangle(cornerRadius: 8.0).fill(backgroundColor))
-            .compositingGroup()
-            .opacity(vm.isVisible ? 1.0 : 0.0)
-            .animation(.linear(duration: vm.isVisible ? 0.05 : 0.1), value: vm.isVisible)
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
-    /// Create a new instance of `TransientLabel`.
-    ///
-    /// - Parameters:
-    ///     - delay: The time, in seconds, after which the label will disappear.
-    public init(delay: TimeInterval = 1, font: Font = .headline.monospacedDigit(), textColor: Color = .primary, backgroundColor: Color = Color(UIColor.systemBackground).opacity(0.4)) {
-        vm = VisibilityManager(delay: delay)
-        self.font = font
-        self.backgroundColor = backgroundColor
+    public override func layoutSubviews() {
+        let bg = UIView(frame: .zero)
+        bg.translatesAutoresizingMaskIntoConstraints = false
+        bg.backgroundColor = backgroundShapeColor
+        bg.layer.cornerRadius = 10
+        
+        let label = UILabel(frame: .zero)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = font
+        label.textColor = textColor
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentHuggingPriority(.required, for: .vertical)
+        self.label = label
+        
+        addSubview(bg)
+        addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            bg.topAnchor.constraint(equalTo: label.topAnchor, constant: -4),
+            bg.bottomAnchor.constraint(equalTo: label.bottomAnchor, constant: 4),
+            bg.leadingAnchor.constraint(equalTo: label.leadingAnchor, constant: -4),
+            bg.trailingAnchor.constraint(equalTo: label.trailingAnchor, constant: 4),
+            
+            label.centerXAnchor.constraint(equalTo: centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
     }
     
-    /// Display the specified string.
-    ///
-    ///  - Parameter string: The string for the label to display.
-    ///
     public func display(_ string: String) {
-        vm.set(string: string)
+        guard let label else { return }
+        label.text = string
+        appear()
     }
     
     public func appear() {
-        vm.appear()
+        visTimer?.invalidate()
+        visTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false, block: { [weak self] _ in
+            self?.disappear()
+        })
+        guard !isVisible else { return }
+        isVisible = true
+        isHidden = false
+        alpha = 0.0
+        UIView.animate(withDuration: 0.1) {
+            self.alpha = 1.0
+        }
     }
-}
-
-#Preview {
     
-    var label1 = TransientLabel()
-    var label2 = TransientLabel(font: .title, backgroundColor: .red.opacity(0.4))
-    var label3 = TransientLabel(backgroundColor: .clear)
-
-    VStack {
-        VStack {
-            label1
-            label2
-                .foregroundColor(.white)
-                .onTapGesture {
-                    label2.appear()
-                }
-            label3
+    private func disappear() {
+        guard isVisible else { return }
+        isVisible = false
+        alpha = 1.0
+        UIView.animate(withDuration: 0.2) {
+            self.alpha = 0.0
+        } completion: { _ in
+            self.isHidden = true
         }
-        .padding()
-        .background(Color.gray)
-        
-        Button {
-            let str = "\(Int.random(in: 100...999))"
-            label1.display(str)
-            label2.display(str)
-            label3.display(str)
-        } label: {
-            Text("Show Label")
-                .padding()
-                .contentShape(Rectangle())
-        }
-
     }
 }
+
+//public init(delay: TimeInterval = 1, font: Font = .headline.monospacedDigit(), textColor: Color = .primary, backgroundColor: Color = Color(UIColor.systemBackground).opacity(0.4)) {
+//    vm = VisibilityManager(delay: delay)
+//    self.font = font
+//    self.backgroundColor = backgroundColor
+//}
