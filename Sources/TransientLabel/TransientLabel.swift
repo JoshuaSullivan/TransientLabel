@@ -8,7 +8,8 @@ public final class TransientLabel: UIView {
     private let backgroundShapeColor: UIColor
     
     public private(set) var text: String = ""
-    private var label: UILabel?
+    private let label: UILabel
+    private let bg: UIView
     
     private var visTimer: Timer?
     
@@ -28,21 +29,7 @@ public final class TransientLabel: UIView {
         self.textColor = textColor
         self.backgroundShapeColor = backgroundColor
         
-        super.init(frame: .zero)
-    }
-    
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public override func layoutSubviews() {
-        let bg = UIView(frame: .zero)
-        bg.translatesAutoresizingMaskIntoConstraints = false
-        bg.backgroundColor = backgroundShapeColor
-        bg.layer.cornerRadius = 10
-        
-        let label = UILabel(frame: .zero)
+        self.label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = font
         label.textColor = textColor
@@ -50,7 +37,13 @@ public final class TransientLabel: UIView {
         label.setContentCompressionResistancePriority(.required, for: .vertical)
         label.setContentHuggingPriority(.required, for: .horizontal)
         label.setContentHuggingPriority(.required, for: .vertical)
-        self.label = label
+        
+        self.bg = UIView(frame: .zero)
+        bg.translatesAutoresizingMaskIntoConstraints = false
+        bg.backgroundColor = backgroundShapeColor
+        bg.layer.cornerRadius = 10
+        
+        super.init(frame: .zero)
         
         addSubview(bg)
         addSubview(label)
@@ -62,12 +55,18 @@ public final class TransientLabel: UIView {
             bg.trailingAnchor.constraint(equalTo: label.trailingAnchor, constant: 4),
             
             label.centerXAnchor.constraint(equalTo: centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor)
+            label.centerYAnchor.constraint(equalTo: centerYAnchor),
+            label.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor)
         ])
     }
     
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     public func display(_ string: String) {
-        guard let label else { return }
+        self.text = string
         label.text = string
         appear()
     }
@@ -95,6 +94,11 @@ public final class TransientLabel: UIView {
         } completion: { _ in
             self.isHidden = true
         }
+    }
+    
+    public override var intrinsicContentSize: CGSize {
+        let labelSize = label.intrinsicContentSize
+        return CGSize(width: labelSize.width + 8, height: labelSize.height + 8)
     }
 }
 
