@@ -8,8 +8,11 @@ public final class TransientLabel: UIView {
     private let backgroundShapeColor: UIColor
     
     public private(set) var text: String = ""
+    private let container: UIView
     private let label: UILabel
     private let bg: UIView
+    
+    private var animator: UIViewPropertyAnimator
     
     private var visTimer: Timer?
     
@@ -29,6 +32,11 @@ public final class TransientLabel: UIView {
         self.textColor = textColor
         self.backgroundShapeColor = backgroundColor
         
+        self.container = UIView(frame: .zero)
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.alpha = 0.0
+        container.isHidden = true
+        
         self.label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = font
@@ -43,10 +51,12 @@ public final class TransientLabel: UIView {
         bg.backgroundColor = backgroundShapeColor
         bg.layer.cornerRadius = 10
         
+        self.animator = UIViewPropertyAnimator(duration: 0.2, curve: .linear)
+        
         super.init(frame: .zero)
         
-        addSubview(bg)
-        addSubview(label)
+        container.addSubview(bg)
+        container.addSubview(label)
         
         NSLayoutConstraint.activate([
             bg.topAnchor.constraint(equalTo: label.topAnchor, constant: -4),
@@ -54,10 +64,26 @@ public final class TransientLabel: UIView {
             bg.leadingAnchor.constraint(equalTo: label.leadingAnchor, constant: -4),
             bg.trailingAnchor.constraint(equalTo: label.trailingAnchor, constant: 4),
             
-            label.centerXAnchor.constraint(equalTo: centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: centerYAnchor),
-            label.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor)
+            label.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            
+            container.topAnchor.constraint(equalTo: topAnchor),
+            container.bottomAnchor.constraint(equalTo: bottomAnchor),
+            container.leadingAnchor.constraint(equalTo: leadingAnchor),
+            container.trailingAnchor.constraint(equalTo: trailingAnchor)
         ])
+        
+        animator.addAnimations { [weak self] in
+            guard let self else { return }
+            self.container.isHidden = false
+            self.container.alpha = 1.0
+        }
+        
+        animator.addCompletion { [weak self] position in
+            if case .end = position {
+                self?.container.isHidden = true
+            }
+        }
     }
     
     @available(*, unavailable)
