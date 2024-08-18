@@ -72,7 +72,7 @@ public struct TransientLabelView: View {
     var label2 = TransientLabelView(font: .title, backgroundColor: .red.opacity(0.4))
     var label3 = TransientLabelView(backgroundColor: .clear)
 
-    VStack {
+    return VStack {
         VStack {
             label1
             label2

@@ -15,9 +15,8 @@ public final class TransientLabel: UIView {
     private var animator: UIViewPropertyAnimator
     
     private var visTimer: Timer?
-    
-    private var isVisible: Bool = false
-    
+    private var isVisible = false
+        
     public init(delay: TimeInterval = 1, font: UIFont = .preferredFont(forTextStyle: .headline), textColor: UIColor = .label, backgroundColor: UIColor = .systemBackground.withAlphaComponent(0.4)) {
         self.delay = delay
         
@@ -35,7 +34,6 @@ public final class TransientLabel: UIView {
         self.container = UIView(frame: .zero)
         container.translatesAutoresizingMaskIntoConstraints = false
         container.alpha = 0.0
-        container.isHidden = true
         
         self.label = UILabel(frame: .zero)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -51,10 +49,12 @@ public final class TransientLabel: UIView {
         bg.backgroundColor = backgroundShapeColor
         bg.layer.cornerRadius = 10
         
+        self.container.alpha = 0.0
         self.animator = UIViewPropertyAnimator(duration: 0.2, curve: .linear)
         
         super.init(frame: .zero)
         
+        addSubview(container)
         container.addSubview(bg)
         container.addSubview(label)
         
@@ -73,16 +73,10 @@ public final class TransientLabel: UIView {
             container.trailingAnchor.constraint(equalTo: trailingAnchor)
         ])
         
+        animator.pausesOnCompletion = true
         animator.addAnimations { [weak self] in
             guard let self else { return }
-            self.container.isHidden = false
             self.container.alpha = 1.0
-        }
-        
-        animator.addCompletion { [weak self] position in
-            if case .end = position {
-                self?.container.isHidden = true
-            }
         }
     }
     
@@ -104,27 +98,29 @@ public final class TransientLabel: UIView {
         })
         guard !isVisible else { return }
         isVisible = true
-        isHidden = false
-        alpha = 0.0
-        UIView.animate(withDuration: 0.1) {
-            self.alpha = 1.0
-        }
+        animator.isReversed = false
+        animator.startAnimation()
     }
     
     private func disappear() {
         guard isVisible else { return }
         isVisible = false
-        alpha = 1.0
-        UIView.animate(withDuration: 0.2) {
-            self.alpha = 0.0
-        } completion: { _ in
-            self.isHidden = true
-        }
+        animator.isReversed = true
+        animator.startAnimation()
     }
     
     public override var intrinsicContentSize: CGSize {
         let labelSize = label.intrinsicContentSize
         return CGSize(width: labelSize.width + 8, height: labelSize.height + 8)
+    }
+    
+    private func describe(animator: UIViewPropertyAnimator, label: String? = nil) {
+        var str = ""
+        if let label {
+            str += "[\(label)] "
+        }
+        str += "fractionComplete: \(animator.fractionComplete), isReversed: \(animator.isReversed), isRunning: \(animator.isRunning)"
+        print(str)
     }
 }
 
