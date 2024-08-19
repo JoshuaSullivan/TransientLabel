@@ -4,4 +4,4 @@ This library produces a label which displays a value for a fixed duration, then 
 but not be a distraction when the value isn't changing. It is used by the [NumericGauge](https://github.com/JoshuaSullivan/NumericGauge/) library to display the current value of 
 the slider.
 
-It is provided for both UIKit and SwiftUI.
+It is provided for both UIKit and SwiftUI. See `TransientLabel.swift` for the UIKit version and `TransientLabelView.swift` for the SwiftUI version.
