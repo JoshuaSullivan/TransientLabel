@@ -6,7 +6,7 @@ the slider.
 
 It is provided for both UIKit and SwiftUI. See `TransientLabel.swift` for the UIKit version and `TransientLabelView.swift` for the SwiftUI version.
 
-## Version 2.0
+## Version 1.1.0
 This new version makes the background of the label much more flexible by adding additional background types. The backgrounds you can use now are:
 
 * No Background
@@ -14,4 +14,4 @@ This new version makes the background of the label much more flexible by adding 
 * UIBlurEffect
 * Custom UIView
 
-I decided to remove the old background color initializer, so this is a breaking change.
+I decided to deprecate the old background color initializer, it will be removed in version 2.0.
