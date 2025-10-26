@@ -15,5 +15,9 @@ let package = Package(
     ],
     targets: [
         .target(name: "TransientLabel"),
+        .testTarget(
+            name: "TransientLabelTests",
+            dependencies: ["TransientLabel"]
+        ),
     ]
 )
