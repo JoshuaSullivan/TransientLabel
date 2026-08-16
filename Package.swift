@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "TransientLabel",
     platforms: [
-        .iOS(.v15)
+        .iOS(.v15),
+        .visionOS(.v1)
     ],
     products: [
         .library(
