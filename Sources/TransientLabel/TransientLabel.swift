@@ -83,6 +83,18 @@ public final class TransientLabel: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+    deinit {
+        // `pausesOnCompletion` is on, so once a show or a hide finishes the
+        // animator sits paused rather than going inactive — and UIKit
+        // terminates the process outright if a paused animator is released.
+        // A label that is going away has nothing left to finish, so stopping
+        // without finishing is both safe and required.
+        visTimer?.invalidate()
+        if animator.state != .inactive {
+            animator.stopAnimation(true)
+        }
+    }
     
     private func setupViews() {
         addSubview(container)
